@@ -57,22 +57,33 @@ export class NoteListService {
     }
   }
 
+  // async addNote(item: Note, colId: "notes" | "trash") {
+  //   if (colId == "notes") {
+  //     await addDoc(this.getNotesRef(), item).catch(
+  //       (err) => { console.error(err) }
+  //     ).then(
+  //       (docRef) => { console.log("Document written with ID: ", docRef?.id); }
+  //     )
+  //   } else {
+  //     await addDoc(this.getTrashRef(), item).catch(
+  //       (err) => { console.error(err) }
+  //     ).then(
+  //       (docRef) => { console.log("Document written with ID: ", docRef?.id); }
+  //     )
+  //   }
+  // }
+
   async addNote(item: Note, colId: "notes" | "trash") {
-    if (colId == "notes") {
-      await addDoc(this.getNotesRef(), item).catch(
-        (err) => { console.error(err) }
-      ).then(
-        (docRef) => { console.log("Document written with ID: ", docRef?.id); }
-      )
-    } else {
-      await addDoc(this.getTrashRef(), item).catch(
-        (err) => { console.error(err) }
-      ).then(
-        (docRef) => { console.log("Document written with ID: ", docRef?.id); }
-      )
+    try {
+      const ref = colId === "notes"
+        ? this.getNotesRef()
+        : this.getTrashRef();
+
+      const docRef = await addDoc(ref, item);
+      console.log("Document written with ID: ", docRef.id);
+    } catch (err) {
+      console.error("Error writing document:", err);
     }
-    console.log(this.normalNotes);
-    console.log(this.trashNotes);
   }
 
   ngonDestroy() {
@@ -91,7 +102,7 @@ export class NoteListService {
   }
 
   subNotesList() {
-    const q = query(this.getNotesRef(), limit(100))
+    const q = query(this.getNotesRef(), where("type", "==", "note"), limit(100))
     return onSnapshot(q, (list) => {
       this.normalNotes = [];
       list.forEach(element => {
